@@ -14,10 +14,13 @@ export interface Animal {
   douyinSearch: string;
   color: string;
   imageUrl: string;
+  soundUrl: string;
   tags: string[];
 }
 
-export const ANIMALS: Animal[] = [
+type BaseAnimal = Omit<Animal, 'soundUrl'>;
+
+const RAW_ANIMALS: BaseAnimal[] = [
   {
     id: 'dragon-li',
     category: 'cat',
@@ -339,3 +342,38 @@ export const ANIMALS: Animal[] = [
     tags: ['小狐狸', '顽皮', '渐层色']
   }
 ];
+
+const CAT_SOUND_BY_ID: Record<string, string> = {
+  'dragon-li': 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=cat-meow-14536.mp3',
+  'british-shorthair': 'https://cdn.pixabay.com/download/audio/2021/08/08/audio_12b0c7443c.mp3?filename=cat-meow-85175.mp3',
+  siamese: 'https://cdn.pixabay.com/download/audio/2021/09/20/audio_c8ce174fb9.mp3?filename=cat-meow-6226.mp3',
+  'maine-coon': 'https://cdn.pixabay.com/download/audio/2022/03/09/audio_4136ce1d7a.mp3?filename=cat-purring-6874.mp3',
+  'russian-blue': 'https://cdn.pixabay.com/download/audio/2022/10/25/audio_94616f1f12.mp3?filename=cat-meow-2-117918.mp3',
+  'japanese-bobtail': 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_4ab02fbe4f.mp3?filename=cat-cry-6871.mp3',
+};
+
+const DEFAULT_CAT_SOUND =
+  'https://cdn.pixabay.com/download/audio/2021/08/08/audio_12b0c7443c.mp3?filename=cat-meow-85175.mp3';
+
+const getRealCatPhoto = (id: string, index: number) => {
+  const keyword = id.replace(/-/g, ',');
+  return `https://loremflickr.com/1200/900/cat,${keyword}?lock=${100 + index}`;
+};
+
+const enrichText = (animal: BaseAnimal) => {
+  const base = animal.description.replace(/。$/, '');
+  return `${base}。在现代家庭环境中，这一品种通常需要稳定作息、规律互动和可预期的空间边界，才能更好地展现其品种特征。`;
+};
+
+const enrichHabits = (animal: BaseAnimal) => {
+  const base = animal.habits.replace(/。$/, '');
+  return `${base}。建议通过每天 15-30 分钟的互动游戏、嗅闻探索和奖励训练，帮助它持续释放精力并保持情绪稳定。`;
+};
+
+export const ANIMALS: Animal[] = RAW_ANIMALS.map((animal, index) => ({
+  ...animal,
+  imageUrl: getRealCatPhoto(animal.id, index),
+  soundUrl: CAT_SOUND_BY_ID[animal.id] || DEFAULT_CAT_SOUND,
+  description: enrichText(animal),
+  habits: enrichHabits(animal),
+}));
