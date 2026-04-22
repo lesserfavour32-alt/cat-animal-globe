@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Camera, Volume2, Pause, Mic, MicOff } from 'lucide-react';
+import { X, MapPin, Camera, Mic, MicOff, Instagram, PlaySquare } from 'lucide-react';
 import { Animal } from '../data/animals';
 
 interface AnimalPanelProps {
@@ -9,79 +9,23 @@ interface AnimalPanelProps {
 }
 
 export const AnimalPanel: React.FC<AnimalPanelProps> = ({ animal, onClose }) => {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
 
-  const localFallbackImage = 'https://loremflickr.com/1200/900/cat,portrait?lock=999';
-
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
+  const isDog = animal?.category === 'dog';
+  const accent = isDog ? '#FFB562' : '#FF9EBB';
+  const localFallbackImage = isDog
+    ? 'https://loremflickr.com/1200/900/dog,portrait?lock=999'
+    : 'https://loremflickr.com/1200/900/cat,portrait?lock=999';
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-    setIsPlaying(false);
     setImageFailed(false);
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
   }, [animal]);
 
-  useEffect(() => {
-    const saved = window.localStorage.getItem('cat-globe-muted');
-    setIsMuted(saved === '1');
-  }, []);
-
-  const handleToggleSound = async () => {
-    if (!animal) return;
-    if (isMuted) return;
-
-    if (!audioRef.current) {
-      audioRef.current = new Audio(animal.soundUrl);
-      audioRef.current.volume = 0.65;
-      audioRef.current.onended = () => setIsPlaying(false);
-    }
-
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-      return;
-    }
-
-    try {
-      await audioRef.current.play();
-      setIsPlaying(true);
-    } catch {
-      setIsPlaying(false);
-    }
-  };
-
-  const handleToggleMute = () => {
-    const next = !isMuted;
-    setIsMuted(next);
-    window.localStorage.setItem('cat-globe-muted', next ? '1' : '0');
-    if (next) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
-      setIsSpeaking(false);
-    }
-  };
-
   const handleToggleSpeak = () => {
-    if (!animal || isMuted) return;
+    if (!animal) return;
     if (isSpeaking) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
@@ -108,25 +52,33 @@ export const AnimalPanel: React.FC<AnimalPanelProps> = ({ animal, onClose }) => 
           animate={{ opacity: 1, x: 0, scale: 1 }}
           exit={{ opacity: 0, x: 100, scale: 0.95 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed right-8 top-1/2 -translate-y-1/2 w-80 z-50"
+          className="fixed bottom-0 left-0 w-full md:right-8 md:top-1/2 md:-translate-y-1/2 md:bottom-auto md:left-auto md:w-96 z-50"
         >
           {/* Core glassmorphism container */}
-          <div className="relative overflow-hidden rounded-[24px] bg-white/10 backdrop-blur-2xl border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] p-6 text-white">
-            
-            {/* Accent glow behind the panel */}
-            <div className="absolute -z-10 -top-10 -right-10 w-40 h-40 bg-[#00f2ff] rounded-full mix-blend-screen filter blur-[80px] opacity-30 pointer-events-none" />
+          <div className="relative overflow-hidden rounded-t-[40px] md:rounded-[32px] bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_18px_60px_rgba(0,0,0,0.55)] px-6 pt-6 pb-7 text-white max-h-[85vh] overflow-y-auto no-scrollbar">
+            {/* Soft inner glow */}
+            <div
+              className="pointer-events-none absolute inset-x-0 -top-10 h-28 opacity-50 blur-2xl"
+              style={{
+                background: `radial-gradient(closest-side at 50% 60%, ${accent}55, transparent 70%)`,
+              }}
+            />
 
             {/* Close button */}
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 rounded-full bg-black/20 hover:bg-black/40 border border-white/5 transition-all z-10 hover:scale-110"
+              className="absolute top-4 right-4 p-2.5 rounded-full bg-black/20 hover:bg-black/35 border border-white/10 transition-all z-10 hover:scale-110"
             >
               <X className="w-4 h-4 text-white/80" />
             </button>
 
             {/* Header image */}
-            <div className="w-full h-40 rounded-2xl bg-gradient-to-br from-[#00f2ff]/20 to-purple-500/20 mb-6 flex items-center justify-center border border-white/10 overflow-hidden relative group">
+            <div
+              className={`w-full h-48 rounded-[24px] bg-gradient-to-br mb-6 flex items-center justify-center border border-white/10 overflow-hidden relative group ${
+                isDog ? 'from-[#FFB562]/18 to-amber-500/10' : 'from-[#FF9EBB]/18 to-purple-500/18'
+              }`}
+            >
               {animal.imageUrl ? (
                 <img 
                   src={imageFailed ? localFallbackImage : animal.imageUrl}
@@ -138,7 +90,10 @@ export const AnimalPanel: React.FC<AnimalPanelProps> = ({ animal, onClose }) => 
                 <Camera className="w-10 h-10 text-white/30" />
               )}
               {/* Category badge */}
-              <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-[10px] font-mono text-[#00f2ff] uppercase tracking-wider">
+              <div
+                className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-mono uppercase tracking-wider"
+                style={{ color: accent }}
+              >
                 {animal.category || 'FELINE DATA'}
               </div>
             </div>
@@ -147,7 +102,8 @@ export const AnimalPanel: React.FC<AnimalPanelProps> = ({ animal, onClose }) => 
             <div className="space-y-4 relative z-10">
               <div>
                 <h2 className="text-2xl font-bold tracking-tight mb-1 drop-shadow-md">{animal.name}</h2>
-                <div className="flex items-center text-[#00f2ff]/80 text-xs font-mono uppercase tracking-widest">
+                <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest" style={{ color: accent, opacity: 0.9 }}>
+                  <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: accent, boxShadow: `0 0 10px ${accent}66` }} />
                   <MapPin className="w-3 h-3 mr-1" />
                   {animal.origin || 'Unknown Origin'}
                 </div>
@@ -182,36 +138,37 @@ export const AnimalPanel: React.FC<AnimalPanelProps> = ({ animal, onClose }) => 
                 type="button"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={handleToggleSound}
-                disabled={isMuted}
-                className="w-full mt-2 rounded-xl border border-white/20 bg-white/10 backdrop-blur-md px-4 py-2.5 flex items-center justify-center gap-2 text-sm text-white hover:bg-white/15 transition-colors"
-              >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                {isMuted ? '当前已静音' : isPlaying ? '暂停猫咪叫声' : '播放猫咪叫声'}
-              </motion.button>
-
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
                 onClick={handleToggleSpeak}
-                disabled={isMuted}
-                className="w-full rounded-xl border border-white/20 bg-white/10 backdrop-blur-md px-4 py-2.5 flex items-center justify-center gap-2 text-sm text-white hover:bg-white/15 transition-colors"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-3 flex items-center justify-center gap-2 text-sm text-white hover:bg-white/10 transition-colors"
               >
                 {isSpeaking ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                {isMuted ? '当前已静音' : isSpeaking ? '停止语音朗读' : '语音朗读介绍'}
+                {isSpeaking ? '停止语音朗读' : '语音朗读介绍'}
               </motion.button>
 
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handleToggleMute}
-                className="w-full rounded-xl border border-white/20 bg-white/10 backdrop-blur-md px-4 py-2.5 flex items-center justify-center gap-2 text-sm text-white hover:bg-white/15 transition-colors"
-              >
-                {isMuted ? <Volume2 className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
-                {isMuted ? '取消全局静音' : '开启全局静音'}
-              </motion.button>
+              <div className="flex gap-3 mt-3">
+                <a
+                  href={`https://www.douyin.com/search/${encodeURIComponent(animal.douyinSearch || animal.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex-1 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-3 py-3 flex items-center justify-center gap-2 text-xs text-white transition-colors ${
+                    isDog ? 'hover:bg-[#FFB562]/18 hover:border-[#FFB562]/35' : 'hover:bg-[#FF9EBB]/18 hover:border-[#FF9EBB]/35'
+                  }`}
+                >
+                  <PlaySquare className="w-4 h-4" />
+                  在抖音观看
+                </a>
+                <a
+                  href={`https://www.instagram.com/explore/tags/${encodeURIComponent(animal.douyinSearch || animal.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex-1 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-3 py-3 flex items-center justify-center gap-2 text-xs text-white transition-colors ${
+                    isDog ? 'hover:bg-[#FFB562]/18 hover:border-[#FFB562]/35' : 'hover:bg-[#FF9EBB]/18 hover:border-[#FF9EBB]/35'
+                  }`}
+                >
+                  <Instagram className="w-4 h-4" />
+                  Instagram
+                </a>
+              </div>
             </div>
           </div>
         </motion.div>

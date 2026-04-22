@@ -355,9 +355,13 @@ const CAT_SOUND_BY_ID: Record<string, string> = {
 const DEFAULT_CAT_SOUND =
   'https://cdn.pixabay.com/download/audio/2021/08/08/audio_12b0c7443c.mp3?filename=cat-meow-85175.mp3';
 
-const getRealCatPhoto = (id: string, index: number) => {
+export const DEFAULT_DOG_SOUND =
+  'https://cdn.pixabay.com/download/audio/2021/08/09/audio_22d2e819e6.mp3?filename=dog-barking-85179.mp3';
+
+const getAnimalPhoto = (id: string, category: string, index: number) => {
   const keyword = id.replace(/-/g, ',');
-  return `https://loremflickr.com/1200/900/cat,${keyword}?lock=${100 + index}`;
+  const base = category === 'dog' ? `dog,${keyword}` : `cat,${keyword}`;
+  return `https://loremflickr.com/1200/900/${base}?lock=${100 + index}`;
 };
 
 const enrichText = (animal: BaseAnimal) => {
@@ -370,10 +374,173 @@ const enrichHabits = (animal: BaseAnimal) => {
   return `${base}。建议通过每天 15-30 分钟的互动游戏、嗅闻探索和奖励训练，帮助它持续释放精力并保持情绪稳定。`;
 };
 
-export const ANIMALS: Animal[] = RAW_ANIMALS.map((animal, index) => ({
+const RAW_DOGS: BaseAnimal[] = [
+  {
+    id: 'golden-retriever',
+    category: 'dog',
+    name: '金毛寻回犬 (Golden Retriever)',
+    origin: '英国苏格兰',
+    lat: 57.1497,
+    lng: -2.0943,
+    description: '以友善、稳定和优秀的服从性闻名，是家庭犬与工作犬的典范。',
+    personality: '温顺、聪明、亲人、乐于取悦主人，训练反馈极佳。',
+    appearance: '中大型犬，披毛金黄且有光泽，表情温和，尾巴丰厚。',
+    habits: '喜欢叼取与水上活动，需要规律运动与社交，适合正向训练。',
+    douyinSearch: '金毛寻回犬',
+    color: '#ff9933',
+    imageUrl: '',
+    tags: ['中大型犬', '温顺', '聪明', '精力旺盛', '寻回']
+  },
+  {
+    id: 'siberian-husky',
+    category: 'dog',
+    name: '西伯利亚雪橇犬 (Husky)',
+    origin: '俄罗斯西伯利亚',
+    lat: 64.6863,
+    lng: 97.7453,
+    description: '经典雪橇犬，耐寒、耐力强，性格外向且充满活力。',
+    personality: '活泼、独立、精力旺盛，社交性强但有点“叛逆”。',
+    appearance: '中型犬，双层被毛厚实，立耳，常见蓝眼或异色瞳。',
+    habits: '需要大量运动与嗅闻探索，适合有时间陪伴的家庭。',
+    douyinSearch: '哈士奇',
+    color: '#ff9933',
+    imageUrl: '',
+    tags: ['中型犬', '精力旺盛', '耐寒', '独立']
+  },
+  {
+    id: 'french-bulldog',
+    category: 'dog',
+    name: '法国斗牛犬 (French Bulldog)',
+    origin: '法国',
+    lat: 48.8566,
+    lng: 2.3522,
+    description: '城市友好型伴侣犬，性格粘人，体型小巧但气场十足。',
+    personality: '温顺、粘人、爱撒娇，适合公寓生活。',
+    appearance: '小型犬，蝙蝠耳、短鼻、肌肉结实，表情很有戏。',
+    habits: '怕热，运动要适度；喜欢陪伴与轻度游戏。',
+    douyinSearch: '法斗',
+    color: '#ff9933',
+    imageUrl: '',
+    tags: ['小型犬', '温顺', '粘人']
+  },
+  {
+    id: 'pembroke-welsh-corgi',
+    category: 'dog',
+    name: '彭布罗克威尔士柯基 (Corgi)',
+    origin: '英国威尔士',
+    lat: 52.1307,
+    lng: -3.7837,
+    description: '牧牛犬出身的短腿小可爱，聪明机灵，精力不小。',
+    personality: '活泼、聪明、亲人，警惕性适中。',
+    appearance: '小型犬，腿短身长，耳朵直立，常见黄白配色。',
+    habits: '需要控制体重与规律运动，喜欢互动训练与追逐游戏。',
+    douyinSearch: '柯基',
+    color: '#ff9933',
+    imageUrl: '',
+    tags: ['小型犬', '聪明', '精力旺盛', '牧羊']
+  },
+  {
+    id: 'shiba-inu',
+    category: 'dog',
+    name: '柴犬 (Shiba Inu)',
+    origin: '日本',
+    lat: 35.6762,
+    lng: 139.6503,
+    description: '日本代表性犬种，性格独立、表情包丰富，被称为“狗界猫咪”。',
+    personality: '独立、机警、聪明，熟人很亲近，陌生人保持距离。',
+    appearance: '中小型犬，立耳卷尾，毛色多样，脸部表情灵动。',
+    habits: '需要早期社会化与一致训练，喜欢规律散步与嗅闻。',
+    douyinSearch: '柴犬',
+    color: '#ff9933',
+    imageUrl: '',
+    tags: ['中型犬', '聪明', '独立']
+  },
+  {
+    id: 'border-collie',
+    category: 'dog',
+    name: '边境牧羊犬 (Border Collie)',
+    origin: '英国苏格兰边境',
+    lat: 55.5486,
+    lng: -2.7861,
+    description: '以极高智商和工作驱动力著称，是训练与运动的“天花板”。',
+    personality: '聪明、专注、精力旺盛，学习速度快。',
+    appearance: '中型犬，体态敏捷，毛色多变，眼神专注。',
+    habits: '需要大量运动与脑力挑战，适合飞盘、敏捷等犬类运动。',
+    douyinSearch: '边境牧羊犬',
+    color: '#ff9933',
+    imageUrl: '',
+    tags: ['中型犬', '聪明', '精力旺盛', '牧羊']
+  },
+  {
+    id: 'german-shepherd',
+    category: 'dog',
+    name: '德国牧羊犬 (German Shepherd)',
+    origin: '德国',
+    lat: 52.5200,
+    lng: 13.4050,
+    description: '经典工作犬，护卫与服从能力突出，常见于警犬与搜救犬领域。',
+    personality: '聪明、护卫、本能强，忠诚稳定。',
+    appearance: '大型犬，背线流畅，耳朵直立，肌肉发达。',
+    habits: '需要系统训练与稳定作息，适合有经验的饲养者。',
+    douyinSearch: '德国牧羊犬',
+    color: '#ff9933',
+    imageUrl: '',
+    tags: ['大型犬', '聪明', '护卫', '精力旺盛']
+  },
+  {
+    id: 'poodle',
+    category: 'dog',
+    name: '贵宾犬 (Poodle)',
+    origin: '法国',
+    lat: 48.8566,
+    lng: 2.3522,
+    description: '聪明又优雅的犬种，掉毛少、可塑性强，是城市家庭热门选择。',
+    personality: '聪明、活泼、亲人，训练反应快。',
+    appearance: '小到中型，卷毛丰厚，常见多种美容造型。',
+    habits: '需要定期美容梳理，喜欢训练、玩具与互动游戏。',
+    douyinSearch: '贵宾犬',
+    color: '#ff9933',
+    imageUrl: '',
+    tags: ['小型犬', '聪明', '活泼']
+  },
+  {
+    id: 'labrador-retriever',
+    category: 'dog',
+    name: '拉布拉多犬 (Labrador Retriever)',
+    origin: '加拿大纽芬兰',
+    lat: 47.5615,
+    lng: -52.7126,
+    description: '导盲犬与家庭犬代表，性格稳定友好，适应能力强。',
+    personality: '温顺、聪明、亲人，稳定可靠。',
+    appearance: '中大型犬，短毛，骨量扎实，尾巴粗壮。',
+    habits: '喜欢叼取与水上活动，容易贪吃需控制饮食与运动。',
+    douyinSearch: '拉布拉多',
+    color: '#ff9933',
+    imageUrl: '',
+    tags: ['中大型犬', '温顺', '聪明', '寻回']
+  },
+  {
+    id: 'dalmatian',
+    category: 'dog',
+    name: '大麦町犬 (Dalmatian)',
+    origin: '克罗地亚达尔马提亚',
+    lat: 43.5081,
+    lng: 16.4402,
+    description: '以黑白斑点闻名，运动能力强，历史上常作为马车护卫犬。',
+    personality: '精力旺盛、警觉、聪明，需要足够运动。',
+    appearance: '中大型犬，短毛，斑点分布独特，体态修长。',
+    habits: '需要高强度运动与训练，适合跑步、徒步等运动型家庭。',
+    douyinSearch: '大麦町犬',
+    color: '#ff9933',
+    imageUrl: '',
+    tags: ['中大型犬', '精力旺盛', '护卫', '聪明']
+  },
+];
+
+export const ANIMALS: Animal[] = [...RAW_ANIMALS, ...RAW_DOGS].map((animal, index) => ({
   ...animal,
-  imageUrl: getRealCatPhoto(animal.id, index),
-  soundUrl: CAT_SOUND_BY_ID[animal.id] || DEFAULT_CAT_SOUND,
+  imageUrl: getAnimalPhoto(animal.id, animal.category, index),
+  soundUrl: animal.category === 'cat' ? (CAT_SOUND_BY_ID[animal.id] || DEFAULT_CAT_SOUND) : DEFAULT_DOG_SOUND,
   description: enrichText(animal),
   habits: enrichHabits(animal),
 }));
